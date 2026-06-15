@@ -16,3 +16,8 @@
 local.properties
 .env
 debug.keystore
+
+# Force Git to track build outputs and compiled APKs
+!/.build-outputs/
+!/.build-outputs/**
+!*.apk

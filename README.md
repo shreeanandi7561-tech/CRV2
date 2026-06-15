@@ -8,6 +8,10 @@ This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/917ec5bf-7be0-4671-9846-bb3e457be852
 
+## Latest Compiled Artifacts
+- **Debug APK Location:** `.build-outputs/app-debug.apk`
+  The application has been successfully configured and compiled with full support for advanced document reading and Gemini voice synthesis.
+
 ## Run Locally
 
 **Prerequisites:**  [Android Studio](https://developer.android.com/studio)
