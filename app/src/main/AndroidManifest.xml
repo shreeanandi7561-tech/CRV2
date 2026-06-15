@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Android 13+ runtime permission for notifications. We use it
+         purely to alert the user when a background MCQ / PDF Notes
+         generation finishes. The app silently falls back to "no
+         notification" if the user denies — generation still runs and
+         saves to the DB unaffected, so this permission is non-
+         critical and we never block any feature on it. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Foreground service permissions. The Generate section runs
+         MCQ / PDF Notes generation as a WorkManager CoroutineWorker
+         with `setForeground`, so the LLM call survives the app being
+         swipe-closed from recents. Android 14+ (API 34+) additionally
+         requires the type-specific permission below; we use
+         dataSync because the generation is a long-running data
+         operation, not a media / location / call task. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!-- Android 11+ package visibility: needed so SpeechRecognizer can
+         resolve the on-device recognition service implementation. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".ReaderApp"
+        android:allowBackup="true"
+        android:icon="@android:drawable/sym_def_app_icon"
+        android:roundIcon="@android:drawable/sym_def_app_icon"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Reader">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Reader"
+            android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden|uiMode|density|fontScale|locale|layoutDirection">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+                Share-sheet handler: when a user taps "Share" on a video
+                inside the YouTube app (or on a YouTube link inside any
+                browser / messenger / notes app) and picks Reader from
+                the chooser, the OS dispatches an ACTION_SEND with the
+                URL in EXTRA_TEXT. MainActivity reads that, drops the
+                URL into SharedYouTubeUrlBus, and the nav graph
+                immediately routes the user into the Upload screen with
+                the URL prefilled and the transcript fetch already
+                running.
+
+                singleTask launchMode (above) makes sure a fresh share
+                while the app is already open lands in the existing
+                instance via onNewIntent, instead of stacking another
+                copy of MainActivity on top.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            WorkManager 2.9.1's bundled manifest declares
+            SystemForegroundService WITHOUT a foregroundServiceType
+            attribute. Android 14+ rejects services that call
+            startForeground without one, so we add `dataSync` here
+            and let the manifest merger combine it with the library's
+            existing service entry. (No `tools:replace` needed because
+            we're adding, not replacing.)
+        -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+
+    </application>
+
+    <!-- Manifest modified for git tracking -->
+</manifest>

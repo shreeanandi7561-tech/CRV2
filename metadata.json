@@ -1,0 +1,8 @@
+{
+  "name": "Reader",
+  "description": "Advanced document, YouTube, and media reader with Gemini assistant integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
